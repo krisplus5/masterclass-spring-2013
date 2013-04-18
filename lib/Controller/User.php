@@ -17,31 +17,8 @@ class Controller_User {
 
         // Do the create
         if(isset($_POST['create'])) {
-            if(empty($_POST['username']) || empty($_POST['email']) ||
-               empty($_POST['password']) || empty($_POST['password_check'])) {
-                $error = 'You did not fill in all required fields.';
-            }
 
-            if(is_null($error)) {
-                if(!filter_input(INPUT_POST, 'email', FILTER_VALIDATE_EMAIL)) {
-                    $error = 'Your email address is invalid';
-                }
-            }
-
-            if(is_null($error)) {
-                if($_POST['password'] != $_POST['password_check']) {
-                    $error = "Your passwords didn't match.";
-                }
-            }
-
-            if(is_null($error)) {
-                $check_sql = 'SELECT * FROM user WHERE username = ?';
-                $check_stmt = $this->db->prepare($check_sql);
-                $check_stmt->execute(array($_POST['username']));
-                if($check_stmt->rowCount() > 0) {
-                    $error = 'Your chosen username already exists. Please choose another.';
-                }
-            }
+			$user = new Model_User($config);
 
             if(is_null($error)) {
                 $params = array(
@@ -49,12 +26,12 @@ class Controller_User {
                     $_POST['email'],
                     md5($_POST['username'] . $_POST['password']),
                 );
+            	$error = $user->createUser($_POST,$params);
 
-                $sql = 'INSERT INTO user (username, email, password) VALUES (?, ?, ?)';
-                $stmt = $this->db->prepare($sql);
-                $stmt->execute($params);
-                header("Location: /user/login");
-                exit;
+                if(isnull($error){
+	                header("Location: /user/login");
+	                exit;
+            	}
             }
         }
         // Show the create form
