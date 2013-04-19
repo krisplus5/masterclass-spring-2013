@@ -2,15 +2,16 @@
 
 class Controller_Story {
 
-	protected $db;
+    protected $db;
     protected $config;
+    protected $model;
+	protected $commentmodel;
 
     public function __construct($config) {
     	$this->config = $config;
-        $dbconfig = $config['database'];
-        $dsn = 'mysql:host=' . $dbconfig['host'] . ';dbname=' . $dbconfig['name'];
-        $this->db = new PDO($dsn, $dbconfig['user'], $dbconfig['pass']);
-        $this->db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+        $this->db = new $Model_MySQL($config);
+		$model = new Model_Story($config,$this->db);
+		$commentmodel = new Model_Comment($config,$this->db);
     }
 
     public function index() {
@@ -19,15 +20,15 @@ class Controller_Story {
             exit;
         }
 
-        $story_sql = 'SELECT * FROM story WHERE id = ?';
-        $story_stmt = $this->db->prepare($story_sql);
-        $story_stmt->execute(array($_GET['id']));
-        if($story_stmt->rowCount() < 1) {
+		$story = $this->model->getStory($_GET['id']);
+
+        if(!isset($story['id'])) {
             header("Location: /");
             exit;
         }
 
-        $story = $story_stmt->fetch(PDO::FETCH_ASSOC);
+		$comments = $this->commentmodel->getCommentsByStory($_GET['id']);
+		$comment_count = $this->commentmodel->getCommentCountByStory($_GET['id']);
 
         $comment_sql = 'SELECT * FROM comment WHERE story_id = ?';
         $comment_stmt = $this->db->prepare($comment_sql);
@@ -69,23 +70,20 @@ class Controller_Story {
             exit;
         }
 
-        $error = '';
+        $error = null;
         if(isset($_POST['create'])) {
-            if(!isset($_POST['headline']) || !isset($_POST['url']) ||
-               !filter_input(INPUT_POST, 'url', FILTER_VALIDATE_URL)) {
-                $error = 'You did not fill in all the fields or the URL did not validate.';
-            } else {
-                $sql = 'INSERT INTO story (headline, url, created_by, created_on) VALUES (?, ?, ?, NOW())';
-                $stmt = $this->db->prepare($sql);
-                $stmt->execute(array(
-                   $_POST['headline'],
-                   $_POST['url'],
-                   $_SESSION['username'],
-                ));
 
-                $id = $this->db->lastInsertId();
-                header("Location: /story/?id=$id");
-                exit;
+			$error = $this->model->createStory($_POST['headline'],$_POST['url'],$_SESSION['username']);
+
+            if(!filter_input(INPUT_POST, 'url', FILTER_VALIDATE_URL)) {
+                $error = 'The URL did not validate.';
+            } else {
+				$error = $this->model->createStory($_POST['headline'],$_POST['url'],$_SESSION['username']);
+				if(is_null($error){
+					$id = $this->db->getLastID();
+                	header("Location: /story/?id=$id");
+                	exit;
+				}
             }
         }
 

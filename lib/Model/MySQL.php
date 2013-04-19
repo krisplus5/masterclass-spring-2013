@@ -4,52 +4,60 @@ class Model_MySQL {
 
     protected $db;
     protected $config;
-	protected static $instance = null;
+    protected $last_query;
+    protected $last_id = 0;
 
-    protected function __construct($config) {
+    public function __construct($config) {
      	$this->config = $config;
         $dbconfig = $config['database'];
         $dsn = 'mysql:host=' . $dbconfig['host'] . ';dbname=' . $dbconfig['name'];
         $this->db = new PDO($dsn, $dbconfig['user'], $dbconfig['pass']);
         $this->db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-		$isInstanced = true;
-   		static::$instance = new static;
     }
 
 	protected function _runSQL($sql,array $params=array()){
 
 		$stmt = $this->db->prepare($sql);
-
-		return $stmt->execute($args);
+		$stmt->execute($params);
+		$this->last_query = $stmt;
+		return $stmt;
 	}
-
-    public static function getInstance($config) {
-    	if(!isset(static::$instance)){
-    		self::__construct($config);
-    	}
-    	return static::$instance;
-    }
 
     public function getAll($sql,$params){
 
 		$result = $this->_runSQL($sql,$params);
-
 		return $result->fetchAll(PDO::FETCH_ASSOC);
     }
 
     public function getOne($sql,$params){
 
 		$result = $this->_runSQL($sql,$params);
-
 		return $result->fetch(PDO::FETCH_ASSOC);
     }
 
     public function insert($sql,$params){
+
     	return $this->_runSQL($sql,$params);
+    	$this->last_id = $this->db->lastInsertId();
     }
 
 	public function getRowcount($sql,$params){
-		return $this->_runSQL($sql,$params)->rowCount();
+
+		if($this->last_query instanceof PDOStatement){
+			return $this->last_query->rowCount();
+		}
+		return 0;
 	}
+
+	public function getLastID(){
+
+		return $this->last_id;
+	}
+
+	public function getLastQuery(){
+
+		return $this->last_query;
+	}
+
 
 }

@@ -4,13 +4,12 @@ class Controller_Comment {
 
 	protected $db;
     protected $config;
+    protected $model;
 
     public function __construct($config) {
     	$this->config = $config;
-        $dbconfig = $config['database'];
-        $dsn = 'mysql:host=' . $dbconfig['host'] . ';dbname=' . $dbconfig['name'];
-        $this->db = new PDO($dsn, $dbconfig['user'], $dbconfig['pass']);
-        $this->db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+        $this->db = new $Model_MySQL($config);
+		$this->model = new Model_Comment($config,$db);
     }
 
     public function create() {

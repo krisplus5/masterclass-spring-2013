@@ -10,29 +10,28 @@ class Model_User {
         $this->db = new Model_MySQL($config);
     }
 
-	public function createUser($data){
+	protected function hashPassword(string $salt,string $password){
+
+		return md5($salt . $password);	// THIS IS NOT SECURE. DO NOT USE IN PRODUCTION.
+	}
+
+	protected function validatePassword($data){
 
 		$error = null;
-		$params = array();
 
-		//validate()
-		$error = $this->validate($data);
-
-		if(isnull($error)) {
-			$params = array(
-				$data['username'],
-				$data['email'],
-				md5($data['username'] . $data['password']),
-			);
-
-			$this->db->runSQL('INSERT INTO user (username, email, password) VALUES (?, ?, ?)',$params);
+		if(empty($data['password']) || empty($data['password_check']){
+			$error = 'You did not fill in all required fields.';
+		}else if($data['password'] != $data['password_check']){
+			$error = '
+		}
+			empty($data['password']) || empty($data['password_check'])) {
+			$error = 'The password fields were blank or they did not match. Please try again.';
 		}
 
 		return $error;
-
 	}
 
-	protected function validate($data){
+	protected function validateUser($data){
 
 		$error = null;
 
@@ -43,7 +42,7 @@ class Model_User {
 
 		if(is_null($error)) {
 			if(!filter_input(INPUT_POST, 'email', FILTER_VALIDATE_EMAIL)) {
-				$error = 'Your email address is invalid';
+				$error = 'Your email address is invalid.';
 			}
 		}
 
@@ -63,20 +62,73 @@ class Model_User {
 		return $error;
 	}
 
-	public function changePassword($username, $password){
+	public function createUser(string $username='',string $email='',string $password=''){
 
-		$sql = 'UPDATE user SET password = ? WHERE username = ?';
-		$params = array(
-			md5($username . $password), // THIS IS NOT SECURE.
-			$username,
-		);
+		$error = null;
+		$params = array();
 
-		return $this->db->insert($sql,$params);
+		//validate()
+		$data = array('username'=>$username,'email'=>$email,'password'=>$password);
+		$error = $this->validateUser($data);
+
+		if(isnull($error)) {
+			$params = array(
+				$data['username'],
+				$data['email'],
+				$this->hashPassword($data['username'],$data['password']),
+			);
+
+			$this->db->runSQL('INSERT INTO user (username, email, password) VALUES (?, ?, ?)',$params);
+		}
+
+		return $error;
 	}
 
+	public function changePassword($username, $password, $password_check){
 
-	public function authUser(){}
+		$error = null;
+		$data = array('password'=>$password,'password_check'=>$password_check);
 
-	public function getUser(){}
+		$error = $this->validatePassword($data));
+
+		if(is_null($error)){
+			$sql = 'UPDATE user SET password = ? WHERE username = ?';
+			$params = array(
+				$this->hashPassword($username,$password),
+				$username,
+			);
+			$this->db->insert($sql,$params);
+		}
+
+		$return error;
+	}
+
+	public function authUser(string $username='', string $password=''){
+		$error = null
+
+		$pwd = $this->hashPassword($username,$password);
+
+		$sql = 'SELECT * FROM user WHERE username = ? AND password = ? LIMIT 1';
+		$params = array($username,$pwd);
+
+		$data = $this->db->getOne($sql,$params);
+		$rowcount = $this->db->getRowcount($sql,$params);
+
+		if($rowCount > 0) {
+		   session_regenerate_id();
+		   $_SESSION['username'] = $data['username'];
+		   $_SESSION['AUTHENTICATED'] = true;
+		}
+
+		$error = 'Your username/password did not match.';
+
+		return $error;
+
+	}
+
+	public function getUser(string $username=''){
+
+		return $this->db->getOne('SELECT * FROM user WHERE username = ?',array($username));
+	}
 
 }
