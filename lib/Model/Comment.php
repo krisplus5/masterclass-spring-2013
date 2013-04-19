@@ -10,32 +10,26 @@ class Model_Comment {
         $this->db = $db;
     }
 
-	public function getCommentsForStory(int $storyID = 0){
+	public function getCommentsForStory($storyID){
 
-		return = $this->db->getOne('SELECT * FROM comment WHERE story_id = ?',array($storyID));
+		return $this->db->getOne('SELECT * FROM comment WHERE story_id = ?',array($storyID));
 	}
 
-	public function createComment(string $created_by='',int $story_id=0,string $comment=''){
+	public function createComment($created_by,$story_id,$comment){
 
-        if(!isset($_SESSION['AUTHENTICATED'])) {
-            die('not auth');
-            header("Location: /");
-            exit;
-        }
-
-		if(strlen($comment) > 0){
-            $filteredcomment = filter_input(INPUT_POST, 'comment', FILTER_SANITIZE_FULL_SPECIAL_CHARS),
+ 		if(strlen($comment) > 0){
+            $filteredcomment = filter_input(INPUT_POST, 'comment', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
 	        $sql = 'INSERT INTO comment (created_by, created_on, story_id, comment) VALUES (?, NOW(), ?, ?)';
-			$this->db->insert($sql,array($_SESSION['username'],$story_id,$filteredcomment));
+			$this->db->insert($sql,array($this->session->get('username'),$story_id,$filteredcomment));
 		}
 
 	}
 
-	public function getCommentsByStory(int $storyid=0){
+	public function getCommentsByStory($storyid){
 
 		$count = 0;
 		$sql = 'SELECT id, created_by, comment FROM comment WHERE story_id = ?';
-		$data $this->db->getAll($sql,array($storyid));
+		$data = $this->db->getAll($sql,array($storyid));
 		$count = $this->db->getRowcount();
 
 		return array('data'=>$data,'rowcount'=>$count);

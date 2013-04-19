@@ -1,6 +1,6 @@
 <?php
 
-class Model_MySQL {
+class Util_MySQL {
 
     protected $db;
     protected $config;
@@ -15,7 +15,7 @@ class Model_MySQL {
         $this->db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     }
 
-	protected function _runSQL($sql,array $params=array()){
+	protected function _runSQL($sql, array $params){
 
 		$stmt = $this->db->prepare($sql);
 		$stmt->execute($params);
@@ -23,25 +23,27 @@ class Model_MySQL {
 		return $stmt;
 	}
 
-    public function getAll($sql,$params){
+    public function getAll($sql,array $params){
 
 		$result = $this->_runSQL($sql,$params);
 		return $result->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    public function getOne($sql,$params){
+    public function getOne($sql,array $params){
 
 		$result = $this->_runSQL($sql,$params);
 		return $result->fetch(PDO::FETCH_ASSOC);
     }
 
-    public function insert($sql,$params){
+    public function insert($sql,array $params){
 
-    	return $this->_runSQL($sql,$params);
+    	$this->_runSQL($sql,$params);
     	$this->last_id = $this->db->lastInsertId();
+    	
+    	return 0;
     }
 
-	public function getRowcount($sql,$params){
+	public function getRowcount($sql,array $params){
 
 		if($this->last_query instanceof PDOStatement){
 			return $this->last_query->rowCount();

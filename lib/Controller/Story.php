@@ -6,12 +6,14 @@ class Controller_Story {
     protected $config;
     protected $model;
 	protected $commentmodel;
+	protected $session;
 
     public function __construct($config) {
-    	$this->config = $config;
-        $this->db = new $Model_MySQL($config);
-		$model = new Model_Story($config,$this->db);
-		$commentmodel = new Model_Comment($config,$this->db);
+     	$this->config = $config;
+        $this->db = new Util_MySQL($config);
+		$this->model = new Model_Story($config,$this->db);
+		$this->commentmodel = new Model_Comment($config,$this->db);
+		$this->session = new Util_Session($config,$this->db);
     }
 
     public function index() {
@@ -22,7 +24,7 @@ class Controller_Story {
 
 		$story = $this->model->getStory($_GET['id']);
 
-        if(!isset($story['id'])) {
+        if(count($story) < 1) {
             header("Location: /");
             exit;
         }
@@ -30,19 +32,13 @@ class Controller_Story {
 		$comments = $this->commentmodel->getCommentsByStory($_GET['id']);
 		$comment_count = $this->commentmodel->getCommentCountByStory($_GET['id']);
 
-        $comment_sql = 'SELECT * FROM comment WHERE story_id = ?';
-        $comment_stmt = $this->db->prepare($comment_sql);
-        $comment_stmt->execute(array($story['id']));
-        $comment_count = $comment_stmt->rowCount();
-        $comments = $comment_stmt->fetchAll(PDO::FETCH_ASSOC);
-
         $content = '
             <a class="headline" href="' . $story['url'] . '">' . $story['headline'] . '</a><br />
             <span class="details">' . $story['created_by'] . ' | ' . $comment_count . ' Comments |
             ' . date('n/j/Y g:i a', strtotime($story['created_on'])) . '</span>
         ';
 
-        if(isset($_SESSION['AUTHENTICATED'])) {
+        if($this->session->isAuthenticated()) {
             $content .= '
             <form method="post" action="/comment/create">
             <input type="hidden" name="story_id" value="' . $_GET['id'] . '" />
@@ -65,26 +61,20 @@ class Controller_Story {
     }
 
     public function create() {
-        if(!isset($_SESSION['AUTHENTICATED'])) {
-            header("Location: /user/login");
-            exit;
-        }
+		if($this->session->isAuthenticated()) {
+			header("Location: /user/login");
+			exit;
+		}
 
         $error = null;
         if(isset($_POST['create'])) {
 
-			$error = $this->model->createStory($_POST['headline'],$_POST['url'],$_SESSION['username']);
-
-            if(!filter_input(INPUT_POST, 'url', FILTER_VALIDATE_URL)) {
-                $error = 'The URL did not validate.';
-            } else {
-				$error = $this->model->createStory($_POST['headline'],$_POST['url'],$_SESSION['username']);
-				if(is_null($error){
-					$id = $this->db->getLastID();
-                	header("Location: /story/?id=$id");
-                	exit;
-				}
-            }
+			$error = $this->model->createStory($_POST['headline'],$_POST['url'],$this->session->get('username'));
+			if(is_null($error)){
+				$id = $this->db->getLastID();
+               	header("Location: /story/?id=$id");
+               	exit;
+			}
         }
 
         $content = '

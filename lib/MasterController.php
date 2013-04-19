@@ -7,7 +7,7 @@ class MasterController {
     public function __construct($config) {
         $this->_setupConfig($config);
         spl_autoload_register(array($this,'autoloader'));
-    }
+     }
 
   	public function execute() {
         $call = $this->_determineControllers();

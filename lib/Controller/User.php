@@ -5,11 +5,13 @@ class Controller_User {
     protected $db;
     protected $config;
     protected $model;
+	protected $session;
 
     public function __construct($config) {
     	$this->config = $config;
-        $this->db = new $Model_MySQL($config);
-		$model = new Model_User($config);
+        $this->db = new Util_MySQL($config);
+		$this->model = new Model_User($config,$this->db);
+		$this->session = new Util_Session($config,$this->db);
     }
 
     public function create() {
@@ -20,7 +22,7 @@ class Controller_User {
 
 			$error = $model->createUser($_POST['username'],$_POST['email'],$_POST['password']);
 
-			if(is_null($error){
+			if(is_null($error)){
 				header("Location: /user/login");
 				exit;
 			}
@@ -44,19 +46,20 @@ class Controller_User {
 
     public function account() {
         $error = null;
-        if(!isset($_SESSION['AUTHENTICATED'])) {
+        
+        if(!$this->session->isAuthenticated()){
             header("Location: /user/login");
             exit;
         }
 
         if(isset($_POST['updatepw'])) {
-			$error = $this->model->changePassword($_SESSION['username'],$_POST['password'],$_POST['password_check']);
+			$error = $this->model->changePassword($this->session->get('username'),$_POST['password'],$_POST['password_check']);
 			if(is_null($error)){
 				$error = 'Your password was changed.';
 			}
         }
 
-		$details = $this->model->getUser($_SESSION['username']);
+		$details = $this->model->getUser($this->session->get('username'));
 
         $content = '
         ' . $error . '<br />
@@ -80,12 +83,13 @@ class Controller_User {
 
         // Do the login
         if(isset($_POST['login'])) {
-            $username = $_POST['user'];
-            $password = $_POST['pass'];
 
-			$error = $this->model->authUser($username,$password);
+			$username = $_POST['user'];
+			$password = $_POST['pass'];
+	
+			$error = $this->session->authenticate($username,$password);
 
-            if($isnull($error)) {
+            if(!is_null($error)) {
                header("Location: /");
                exit;
             }
@@ -106,7 +110,7 @@ class Controller_User {
 
     public function logout() {
         // Log out, redirect
-        session_destroy();
+		$this->session->unauthenticate();
         header("Location: /");
     }
 }
