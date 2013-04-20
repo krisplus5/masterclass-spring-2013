@@ -4,3 +4,4 @@ config.php
 .DS_Store
 .Trashes
 Thumbs.db
+.project

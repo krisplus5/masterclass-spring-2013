@@ -2,31 +2,33 @@
 
 class Controller_Comment {
 
-	protected $db;
     protected $config;
+	protected $db;
+	protected $model;
+	protected $session;    
 
     public function __construct($config) {
     	$this->config = $config;
-        $dbconfig = $config['database'];
-        $dsn = 'mysql:host=' . $dbconfig['host'] . ';dbname=' . $dbconfig['name'];
-        $this->db = new PDO($dsn, $dbconfig['user'], $dbconfig['pass']);
-        $this->db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    	$this->db = new Util_DBmysql($config);
+		$this->model = new Model_Comment($config,$this->db);
+		$this->session = new Util_Session();
     }
 
     public function create() {
-        if(!isset($_SESSION['AUTHENTICATED'])) {
+    	if($this->session->isAuthenticated()){
             die('not auth');
             header("Location: /");
             exit;
         }
 
         $sql = 'INSERT INTO comment (created_by, created_on, story_id, comment) VALUES (?, NOW(), ?, ?)';
-        $stmt = $this->db->prepare($sql);
-        $stmt->execute(array(
+		$params = array(
             $_SESSION['username'],
             $_POST['story_id'],
             filter_input(INPUT_POST, 'comment', FILTER_SANITIZE_FULL_SPECIAL_CHARS),
         ));
+		$this->model->create($sql,$params);
+
         header("Location: /story/?id=" . $_POST['story_id']);
     }
 
