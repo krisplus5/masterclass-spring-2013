@@ -9,9 +9,8 @@ class Controller_User {
 
     public function __construct($config) {
     	$this->config = $config;
-        $this->db = new Util_DBmysql($config);
-        $this->session = new Util_Session();
-        $this->model = new Model_User($config,$this->db,$this->session);
+        $this->model = new Model_User($config);
+        $this->session = new Model_Session($config);
     }
 
     public function create() {
@@ -38,7 +37,7 @@ class Controller_User {
 
             if(is_null($error)) {
 				
-				$check = $this->model->get($_POST['username']);
+				$check = $this->model->setValue('username',$_POST['username']);
                 if($check->rowCount() > 0) {
                     $error = 'Your chosen username already exists. Please choose another.';
                 }

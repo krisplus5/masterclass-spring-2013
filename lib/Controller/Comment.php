@@ -9,9 +9,9 @@ class Controller_Comment {
 
     public function __construct($config) {
     	$this->config = $config;
-    	$this->db = new Util_DBmysql($config);
-		$this->model = new Model_Comment($config,$this->db);
-		$this->session = new Util_Session();
+    	$this->db = new Model_DBmysql($config);
+		$this->model = new Model_Comment($config);
+		$this->session = new Model_Session($config);
     }
 
     public function create() {

@@ -8,7 +8,7 @@ class Controller_Index {
 
     public function __construct($config) {
      	$this->config = $config;
-		$this->db = new Util_DBmysql($config);
+		$this->db = new Model_DBmysql($config);
 		$this->storymodel = new Model_Story($config,$this->db);
     }
 

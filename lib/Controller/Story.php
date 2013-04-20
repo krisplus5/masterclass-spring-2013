@@ -9,9 +9,9 @@ class Controller_Story {
 
     public function __construct($config) {
  		$this->config = $config;
-    	$this->db = new Util_Database_Mysql($config);
-		$this->model = new Model_Story($config,$this->db);
-		$this->session = new Util_Session();
+    	$this->db = new Model_DBmysql($config);
+		$this->model = new Model_Story($config);
+		$this->session = new Model_Session($config);
     }
 
     public function index() {
@@ -70,7 +70,7 @@ class Controller_Story {
                !filter_input(INPUT_POST, 'url', FILTER_VALIDATE_URL)) {
                 $error = 'You did not fill in all the fields or the URL did not validate.';
             } else {
-            	$id = $this->model->create($_POST['headline'],$_POST['url'],$this->session->get('username'));
+            	$id = $this->model->create($_POST['headline'],$_POST['url'],$this->session->getValue('username'));
 
                 header("Location: /story/?id=$id");
                 exit;

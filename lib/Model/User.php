@@ -4,11 +4,12 @@ class Model_User {
 
     protected $config;
     protected $db;
+    protected $session;
 
-    public function __construct($config,$db,$session) {
+    public function __construct($config) {
     	$this->config = $config;
-        $this->db = new Util_DBmysql($config);
-		$this->session = $session;
+        $this->db = new Model_DBmysql($config);
+        $this->session = new Model_Session($config);
     }
 
 	public function get($id=0){
