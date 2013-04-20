@@ -10,6 +10,7 @@ class Util_Session {
      	$this->config = $config;
 		$this->db = $db;
 		$this->model = new Model_User($config,$db);
+		session_start();
     }
 
 	public function isAuthenticated(){

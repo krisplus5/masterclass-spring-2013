@@ -7,5 +7,3 @@ require_once 'MasterController.php';
 
 $framework = new MasterController($config);
 echo $framework->execute();
-
-var_dump($_SESSION);
