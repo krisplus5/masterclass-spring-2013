@@ -1,39 +1,39 @@
 <?php
 
 class Controller_Index {
-
-    protected $db;
+    
+    protected $story_model;
+    protected $comment_model;
     protected $config;
-    protected $storymodel;
-
+    protected $session;
+    
+    
     public function __construct($config) {
-     	$this->config = $config;
-		$this->db = new Model_DBmysql($config);
-		$this->storymodel = new Model_Story($config,$this->db);
+        $this->config = $config;
+        $this->story_model = new Model_Story($config);
+        $this->comment_model = new Model_Comment($config);
+        $this->session = new Session_Default();
     }
-
+    
     public function index() {
-
-		$stories = $this->storymodel->getStories();
+        
+        $stories = $this->story_model->getListOfStories();
         
         $content = '<ol>';
         
-		if($stories){
-	        foreach($stories as $story) {
-	            $count = $this->comment_model->getCommentCountForStory($story['id']);
-	            $content .= '
-	                <li>
-	                <a class="headline" href="' . $story['url'] . '">' . $story['headline'] . '</a><br />
-	                <span class="details">' . $story['created_by'] . ' | <a href="/story/?id=' . $story['id'] . '">' . $comments['count'] . ' Comments</a> | 
-	                ' . date('n/j/Y g:i a', strtotime($story['created_on'])) . '</span>
-	                </li>
-	            ';
-	        }
-		}
-		
+        foreach($stories as $story) {
+            $count = $this->comment_model->getCommentCountForStory($story['id']);
+            $content .= '
+                <li>
+                <a class="headline" href="' . $story['url'] . '">' . $story['headline'] . '</a><br />
+                <span class="details">' . $story['created_by'] . ' | <a href="/story/?id=' . $story['id'] . '">' . $count['count'] . ' Comments</a> | 
+                ' . date('n/j/Y g:i a', strtotime($story['created_on'])) . '</span>
+                </li>
+            ';
+        }
+        
         $content .= '</ol>';
-
-		require $this->config['views']['layout_path'] . '/layout.phtml';
-
+        
+        require $this->config['views']['layout_path'] . '/layout.phtml';
     }
 }
