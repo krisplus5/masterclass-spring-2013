@@ -1,107 +1,43 @@
 <?php
 
 class Model_User {
-
-    protected $config;
-	protected $db;
-
+    
+    protected $db;
+    
     public function __construct($config) {
-     	$this->config = $config;
-        $this->db = new Util_MySQL($config);
+        $this->config = $config;
+        $this->db = new Database_Mysql($config);
     }
-
-	protected function validatePassword(array $data){
-
-		$error = null;
-
-		if(empty($data['password']) || empty($data['password_check'])){
-			$error = 'You did not fill in all required fields.';
-		}else if($data['password'] != $data['password_check']){
-			$error = 'The password fields did not match. Please try again.';
-		}else if(empty($data['password']) || empty($data['password_check'])) {
-			$error = 'The password fields were blank or they did not match. Please try again.';
-		}
-
-		return $error;
-	}
-
-	protected function validateUser($data){
-
-		$error = null;
-
-		if(empty($data['username']) || empty($data['email']) ||
-		   empty($data['password']) || empty($data['password_check'])) {
-			$error = 'You did not fill in all required fields.';
-		}
-
-		if(is_null($error)) {
-			if(!filter_input(INPUT_POST, 'email', FILTER_VALIDATE_EMAIL)) {
-				$error = 'Your email address is invalid.';
-			}
-		}
-
-		if(is_null($error)) {
-			if($data['password'] != $data['password_check']) {
-				$error = "Your passwords didn't match.";
-			}
-		}
-
-		if(is_null($error)) {
-			$count = $this->db->getRowcount('SELECT 1 FROM user WHERE username = ?',array($data->username));
-			if($count > 0) {
-				$error = 'Your chosen username already exists. Please choose another.';
-			}
-		}
-
-		return $error;
-	}
-
-	public function hashPassword($salt,$password){
-
-		return md5($salt . $password);	// THIS IS NOT SECURE. DO NOT USE IN PRODUCTION.
-	}
-
-	public function createUser($username,$email,$password){
-
-		$error = null;
-		$params = array();
-
-		//validate()
-		$data = array('username'=>$username,'email'=>$email,'password'=>$password);
-		$error = $this->validateUser($data);
-
-		if(isnull($error)) {
-			$params = array(
-				$data['username'],
-				$data['email'],
-				$this->hashPassword($data['username'],$data['password']),
-			);
-
-			$this->db->insert('INSERT INTO user (username, email, password) VALUES (?, ?, ?)',$params);
-		}
-
-		return $error;
-	}
-
-	public function changePassword($username, $password, $password_check){
-
-		$error = null;
-		$data = array('password'=>$password,'password_check'=>$password_check);
-
-		$error = $this->validatePassword($data);
-
-		if(is_null($error)){
-			$sql = 'UPDATE user SET password = ? WHERE username = ?';
-			$params = array($this->hashPassword($username,$password),$username);
-			$this->db->insert($sql,$params);
-		}
-
-		return $error;
-	}
-
-	public function getUser($username){
-
-		return $this->db->getOne('SELECT * FROM user WHERE username = ?',array($username));
-	}
-
+    
+    public function createUser(array $params = array()) {
+        $sql = 'INSERT INTO user (username, email, password) VALUES (?, ?, ?)';
+        return $stmt = $this->db->insert($sql, $params);
+    }
+    
+    public function checkUsername($username) {
+        $check_sql = 'SELECT * FROM user WHERE username = ?';
+        $check_stmt = $this->db->fetchOne($check_sql, array($username));
+        return $this->db->rowCount();
+    }
+    
+    public function authenticateUser($username, $password) {
+        $password = md5($username . $password); // THIS IS NOT SECURE. DO NOT USE IN PRODUCTION.
+        $sql = 'SELECT * FROM user WHERE username = ? AND password = ? LIMIT 1';
+        $user = $this->db->fetchOne($sql, array($username, $password));
+        return array('authenticated' => $this->db->rowCount(), 'user' => $user);
+    }
+    
+    public function getUserData($username) {
+        $dsql = 'SELECT * FROM user WHERE username = ?';
+        return $this->db->fetchOne($dsql, array($username));    
+    }
+    
+    public function changeUserPassword($username, $password) {
+        $sql = 'UPDATE user SET password = ? WHERE username = ?';
+        $params = array(
+           md5($username . $password), // THIS IS NOT SECURE. 
+           $username,
+        );
+        return $this->db->insert($sql, $params);     
+    }
 }

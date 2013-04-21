@@ -1,34 +1,59 @@
 <?php
 
 class Controller_User {
-
-    protected $db;
+    
     protected $config;
     protected $model;
-	protected $session;
-
+    protected $session;
+    
     public function __construct($config) {
-    	$this->config = $config;
-        $this->db = new Util_MySQL($config);
-		$this->model = new Model_User($config,$this->db);
-		$this->session = new Util_Session($config,$this->db);
+        $this->config = $config;
+        $this->model = new Model_User($config);
+        $this->session = new Session_Default();
     }
-
+    
     public function create() {
         $error = null;
-
+        
         // Do the create
         if(isset($_POST['create'])) {
+            if(empty($_POST['username']) || empty($_POST['email']) ||
+               empty($_POST['password']) || empty($_POST['password_check'])) {
+                $error = 'You did not fill in all required fields.';
+            }
+            
+            if(is_null($error)) {
+                if(!filter_input(INPUT_POST, 'email', FILTER_VALIDATE_EMAIL)) {
+                    $error = 'Your email address is invalid';
+                }
+            }
+            
+            if(is_null($error)) {
+                if($_POST['password'] != $_POST['password_check']) {
+                    $error = "Your passwords didn't match.";
+                }
+            }
+            
+            if(is_null($error)) {
 
-			$error = $model->createUser($_POST['username'],$_POST['email'],$_POST['password']);
-
-			if(is_null($error)){
-				header("Location: /user/login");
-				exit;
-			}
+                if($this->model->checkUsername($_POST['username']) > 0) {
+                    $error = 'Your chosen username already exists. Please choose another.';
+                }
+            }
+            
+            if(is_null($error)) {
+                $params = array(
+                    $_POST['username'],
+                    $_POST['email'],
+                    md5($_POST['username'] . $_POST['password']),
+                );
+                $this->model->createUser($params);
+                header("Location: /user/login");
+                exit;
+            }
         }
-
         // Show the create form
+        
         $content = '
             <form method="post">
                 ' . $error . '<br />
@@ -39,62 +64,68 @@ class Controller_User {
                 <input type="submit" name="create" value="Create User" />
             </form>
         ';
-
-		require $this->config['views']['layout_path'] . '/layout.phtml';
-
+        
+        require $this->config['views']['layout_path'] . '/layout.phtml';
+        
     }
-
+    
     public function account() {
         $error = null;
-        
-        if(!$this->session->isAuthenticated()){
+        if(!$this->session->isAuthenticated()) {
             header("Location: /user/login");
             exit;
         }
-
+        
         if(isset($_POST['updatepw'])) {
-			$error = $this->model->changePassword($this->session->get('username'),$_POST['password'],$_POST['password_check']);
-			if(is_null($error)){
-				$error = 'Your password was changed.';
-			}
+            if(!isset($_POST['password']) || !isset($_POST['password_check']) ||
+               $_POST['password'] != $_POST['password_check']) {
+                $error = 'The password fields were blank or they did not match. Please try again.';       
+            }
+            else {
+                $this->model->changeUserPassword($this->session->username, $_POST['password']);
+                $error = 'Your password was changed.';
+            }
         }
-
-		$details = $this->model->getUser($this->session->get('username'));
-
+        
+        $details = $this->model->getUserData($this->session->username);
+        
         $content = '
         ' . $error . '<br />
-
+        
         <label>Username:</label> ' . $details['username'] . '<br />
         <label>Email:</label>' . $details['email'] . ' <br />
-
+        
          <form method="post">
                 ' . $error . '<br />
             <label>Password</label> <input type="password" name="password" value="" /><br />
             <label>Password Again</label> <input type="password" name="password_check" value="" /><br />
             <input type="submit" name="updatepw" value="Create User" />
         </form>';
-
-		require $this->config['views']['layout_path'] . '/layout.phtml';
-
+        
+        require $this->config['views']['layout_path'] . '/layout.phtml';
     }
-
+    
     public function login() {
         $error = null;
-
         // Do the login
         if(isset($_POST['login'])) {
+            $username = $_POST['user'];
+            $password = $_POST['pass'];
+            $result = $this->model->authenticateUser($username, $password);
 
-			$username = $_POST['user'];
-			$password = $_POST['pass'];
-	
-			$error = $this->session->authenticate($username,$password);
-
-            if(!is_null($error)) {
+            if($result['authenticated']) {
+               $data = $result['user'];
+               session_regenerate_id();
+               $this->session->username = $data['username'];
+               $this->session->authenticate();
                header("Location: /");
                exit;
             }
+            else {
+                $error = 'Your username/password did not match.';
+            }
         }
-
+        
         $content = '
             <form method="post">
                 ' . $error . '<br />
@@ -103,14 +134,14 @@ class Controller_User {
                 <input type="submit" name="login" value="Log In" />
             </form>
         ';
-
-		require $this->config['views']['layout_path'] . '/layout.phtml';
-
+        
+        require $this->config['views']['layout_path'] . '/layout.phtml';
+        
     }
-
+    
     public function logout() {
         // Log out, redirect
-		$this->session->unauthenticate();
+        session_destroy();
         header("Location: /");
     }
 }

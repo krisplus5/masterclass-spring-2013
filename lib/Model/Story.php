@@ -1,44 +1,30 @@
 <?php
 
 class Model_Story {
-
-    protected $db;
-    protected $config;
-
-    public function __construct($config,$db) {
-     	$this->config = $config;
-        $this->db = $db;
+    
+    protected $db; 
+    
+    public function __construct($config) {
+        $this->config = $config;
+        $this->db = new Database_Mysql($config);
     }
-
-	protected function validateStory(array $story){
-		$error = null;
-
-		if(!isset($story['headline']) || !isset($story['url']) ||
-			!filter_input(INPUT_POST, 'url', FILTER_VALIDATE_URL)) {
-               $error = 'You did not fill in all the fields or the URL did not validate.';
-		}
-		return $error;
-	}
-
-	public function getStory($storyID){
-
-		return $this->db->getOne('SELECT * FROM story WHERE id = ?',array($storyID));
-	}
-
-	public function getStories(){
-
-		return $this->db->getAll('SELECT * FROM story ORDER BY created_on DESC',array());
-	}
-
-	public function createStory($headline, $url, $created_by){
-		$error = null;
-
-		$error = $this->validateStory(array('headline'=>$headline,'url'=>$url,'created_by'=>$created_by));
-
-		if(is_null($error)){
-			$error = $this->db->insert('INSERT INTO story (headline, url, created_by, created_on) VALUES (?, ?, ?, NOW())',array($headline,$url,$created_by));
-		}
-
-		return $error;
-	}
+    
+    public function getListOfStories() {
+        $sql = 'SELECT * FROM story ORDER BY created_on DESC';
+        $stories = $this->db->fetchAll($sql);
+        return $stories;
+    }
+    
+    public function getStory($story_id) {
+        $story_sql = 'SELECT * FROM story WHERE id = ?';
+        $story = $this->db->fetchOne($story_sql, array($story_id));
+        return $story;
+    }
+    
+    public function createStory(array $params = array()) {
+        $sql = 'INSERT INTO story (headline, url, created_by, created_on) VALUES (?, ?, ?, NOW())';
+        $this->db->insert($sql, $params);
+        $id = $this->db->lastInsertId();
+        return $id;
+    }
 }
