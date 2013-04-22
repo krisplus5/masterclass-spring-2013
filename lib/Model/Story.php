@@ -6,7 +6,7 @@ class Model_Story {
     
     public function __construct($config) {
         $this->config = $config;
-        $this->db = new Database_Mysql($config);
+        $this->db = new Database_Statement($config);
     }
     
     public function getListOfStories() {

@@ -4,7 +4,7 @@ class Model_Comment {
     
     public function __construct($config) {
         $this->config = $config;
-        $this->db = new Database_Mysql($config);
+        $this->db = new Database_Statement($config);
     }
     
     public function getCommentCountForStory($story_id) {
