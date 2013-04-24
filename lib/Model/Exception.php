@@ -1,6 +1,6 @@
 <?php
 
-class UpvoteException extends Exception
+class Model_Exception extends Exception
 {
     public function __construct($message = null, $code = 0, Exception $previous = null) {
 		$message = 'UPVOTE: ' . $message;
