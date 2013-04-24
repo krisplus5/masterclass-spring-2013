@@ -2,20 +2,16 @@
 
 abstract class Database_Base {
 	
-	protected $config;
-	protected $dbconfig;
-	protected $dsn;
+	protected $dbconfig = array();
 	protected $db;
 	
-	public function __construct ($config){
-		$this->config = $config;
-		$this->dbconfig = $config['database'];
+	public function __construct (array $dbconfig = array()){
+		$this->dbconfig = $dbconfig;
+		$this->_connect();
 	}
 	
-	abstract public function connect();
+	abstract protected function _connect();
 	
-	public function prepare($sql, array $options = array()){
-		return $this->db->prepare($sql, $options);
-	}
+	abstract public function prepare($sql, array $options = array());
 	
 }
