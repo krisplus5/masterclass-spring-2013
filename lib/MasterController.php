@@ -46,7 +46,7 @@ class MasterController {
         
         return $return;
     }
-    
+
     private function _setupConfig($config) {
         $this->config = $config;
     }
