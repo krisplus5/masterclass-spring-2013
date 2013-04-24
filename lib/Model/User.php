@@ -1,13 +1,6 @@
 <?php
 
-class Model_User {
-    
-    protected $db;
-    
-    public function __construct($config) {
-        $this->config = $config;
-        $this->db = new Database_Mysql($config['database']);
-    }
+class Model_User extends Model_Base {
     
     public function createUser(array $params = array()) {
         $sql = 'INSERT INTO user (username, email, password) VALUES (?, ?, ?)';
@@ -44,16 +37,5 @@ class Model_User {
         $stmt = $this->db->prepare($sql);
         return $stmt.execute($params);     
     }
-
-    protected function _do_insert_or_delete($sql, array $args = array()) {
-        $stmt = $this->db->prepare($sql);
-        return $stmt->execute($args);
-    }
-
-	protected function _do_prepare_and_query($sql, array $args = array()){
-		$stmt = $this->db->prepare($sql);
-		$stmt->execute($args);
-		return $stmt;
-	}
 
 }
