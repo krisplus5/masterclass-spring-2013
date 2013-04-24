@@ -29,7 +29,7 @@ class Controller_Story {
                 
         $comments = $this->comment_model->getStoryComments($_GET['id']);
         $comment_count = count($comments);
-        
+
         $content = '
             <a class="headline" href="' . $story['url'] . '">' . $story['headline'] . '</a><br />
             <span class="details">' . $story['created_by'] . ' | ' . $comment_count . ' Comments | 

@@ -3,7 +3,7 @@
 class Session_Default {
         
     public function __construct() {
-        session_start();
+       $success = session_start();
     }
     
     public function __get($name) {
@@ -23,7 +23,11 @@ class Session_Default {
     }
     
     public function isAuthenticated() {
-        return $_SESSION['AUTHENTICATED'];
+    	if(!isset($_SESSION['AUTHENTICATED'])){
+			return false;
+    	}else{
+	        return $_SESSION['AUTHENTICATED'];
+    	}
     }
     
     public function regenerate() {

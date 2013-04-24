@@ -86,9 +86,9 @@ class Controller_User {
                 $error = 'Your password was changed.';
             }
         }
-        
+
         $details = $this->model->getUserData($this->session->username);
-        
+
         $content = '
         ' . $error . '<br />
         
@@ -112,12 +112,11 @@ class Controller_User {
             $username = $_POST['user'];
             $password = $_POST['pass'];
             $result = $this->model->authenticateUser($username, $password);
-
             if($result['authenticated']) {
                $data = $result['user'];
-               session_regenerate_id();
-               $this->session->username = $data['username'];
+               $this->session->regenerate();
                $this->session->authenticate();
+               $this->session->__set('username',$data['username']);
                header("Location: /");
                exit;
             }
