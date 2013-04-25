@@ -10,7 +10,7 @@ class Database_Mysql extends Database_Base {
 	
     public function prepare($sql, array $options = array()) {
         $stmt = $this->db->prepare($sql, $options);
-		return new Database_Statement($this, $stmt);
+		return new Database_Statement_Statement($this, $stmt);
     }
     
     protected function lastInsertId() {

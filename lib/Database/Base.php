@@ -1,6 +1,6 @@
 <?php
 
-abstract class Database_Base {
+abstract class Database_Base implements Database_Interface {
 	
 	protected $dbconfig = array();
 	protected $db;
