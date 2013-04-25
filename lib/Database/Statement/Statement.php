@@ -1,6 +1,6 @@
  <?php 
   
- class Database_Statement {
+ class Database_Statement_Statement implements Database_Statement_Interface {
 
 	protected $db;
 	protected $stmt;

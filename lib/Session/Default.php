@@ -1,6 +1,6 @@
 <?php
 
-class Session_Default {
+class Session_Default implements Session_Interface {
         
     public function __construct() {
        $success = session_start();
