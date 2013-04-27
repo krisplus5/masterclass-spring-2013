@@ -1,6 +1,6 @@
 <?php 
 
-class Response_Http implemented Response_Interface {
+class Response_Http implements Response_Interface {
 	
 	protected $_data = array();
 	protected $_view;
