@@ -3,8 +3,10 @@
 class Session_Default implements Session_Interface {
         
     public function __construct() {
-       $success = session_start();
-    }
+		if(!isset($_SESSION)) { 
+			$success = session_start();
+		}
+	}
     
     public function __get($name) {
         return $_SESSION[$name];
