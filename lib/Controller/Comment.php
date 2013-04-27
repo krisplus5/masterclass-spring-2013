@@ -1,15 +1,9 @@
 <?php
 
-class Controller_Comment {
+class Controller_Comment extends Controller_Base {
     
-    protected $model;
-    protected $config;
-    protected $session;
-    
-    public function __construct($config) {
-        $this->config = $config;
-        $this->model = new Model_Comment($config);
-        $this->session = new Session_Default();
+    protected function _loadModels(){
+        $this->model = new Model_Comment($this->config);
     }
     
     public function create() {

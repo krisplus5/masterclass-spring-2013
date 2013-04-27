@@ -15,36 +15,37 @@ class MasterController {
         $class = ucfirst(array_shift($call_class));
         $class = 'Controller_' . $class;
         $method = array_shift($call_class);
-        $o = new $class($this->config);
+        $o = new $class($this->config, new Session_Default);
         return $o->$method();
     }
     
     private function _determineControllers()
     {
-        if (isset($_SERVER['REDIRECT_BASE'])) {
-            $rb = $_SERVER['REDIRECT_BASE'];
-        } else {
-            $rb = '';
-        }
+		if (isset($_SERVER['REDIRECT_BASE'])) {
+			$rb = $_SERVER['REDIRECT_BASE'];
+		} else {
+			$rb = '';
+		}
+
+//        $ruri = $_SERVER['REQUEST_URI'];
+		$request = new Request_Http();
+		$ruri = $request->getServer('REQUEST_URI');
+		$path = str_replace($rb, '', $ruri);
+		$return = array();
         
-        $ruri = $_SERVER['REQUEST_URI'];
-        $path = str_replace($rb, '', $ruri);
-        $return = array();
-        
-        foreach($this->config['routes'] as $k => $v) {
-            $matches = array();
-            $pattern = '$' . $k . '$';
-            if(preg_match($pattern, $path, $matches))
-            {
-                $controller_details = $v;
-                $path_string = array_shift($matches);
-                $arguments = $matches;
-                $controller_method = explode('/', $controller_details);
-                $return = array('call' => $controller_method);
-            }
-        }
-        
-        return $return;
+		foreach($this->config['routes'] as $k => $v) {
+			$matches = array();
+			$pattern = '$' . $k . '$';
+			if(preg_match($pattern, $path, $matches)){
+				$controller_details = $v;
+				$path_string = array_shift($matches);
+				$arguments = $matches;
+				$controller_method = explode('/', $controller_details);
+				$return = array('call' => $controller_method);
+			}
+		}
+
+		return $return;
     }
 
     private function _setupConfig($config) {

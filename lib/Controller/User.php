@@ -1,17 +1,11 @@
 <?php
 
-class Controller_User {
+class Controller_User extends Controller_Base {
     
-    protected $config;
-    protected $model;
-    protected $session;
-    
-    public function __construct($config) {
-        $this->config = $config;
-        $this->model = new Model_User($config);
-        $this->session = new Session_Default();
-    }
-    
+	protected function _loadModels(){
+		$this->model = new Model_User($this->config);
+	}
+
     public function create() {
         $error = null;
         
@@ -78,7 +72,7 @@ class Controller_User {
         
         if(isset($_POST['updatepw'])) {
             if(!isset($_POST['password']) || !isset($_POST['password_check']) ||
-               $_POST['password'] != $_POST['password_check']) {
+               $_POST['password'] != $_POST['password_check'] || $_POST['password']=='') {
                 $error = 'The password fields were blank or they did not match. Please try again.';       
             }
             else {
