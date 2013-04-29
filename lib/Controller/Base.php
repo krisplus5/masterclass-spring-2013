@@ -6,7 +6,7 @@ abstract class Controller_Base {
     protected $config = array();
     protected $session;
 
-    public function __construct(array $config = array(), Session_Interface $session, Request_Interface $request, Response_Interface $response) {
+    public function __construct(array $config = array(), Session_Interface $session, Request_Interface $request) {
         $this->config = $config;
         $this->session = $session;
         $this->_loadModels();

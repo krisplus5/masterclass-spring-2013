@@ -9,6 +9,11 @@ return array(
         'name' => '',
     ),
     
+    'router' => 'Default',
+    'autoloader' => 'Default',
+    'request' => 'Http',
+    'response' => 'Http',
+
     'routes' => array(
         '' => 'index/index',
         'story' => 'story/index',
@@ -23,6 +28,10 @@ return array(
     'views' => array(
     	'view_path' => '',
     	'layout_path' => realpath('../view/layouts'),
-    )
+    ),
+
+    'session_config' => array(
+        'driver' => 'Default',
+    ),
 
 );

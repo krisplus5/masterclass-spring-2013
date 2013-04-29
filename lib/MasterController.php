@@ -7,7 +7,6 @@ class MasterController {
     protected $_db;
     protected $router;
     protected $request;
-    protected $response;
     
     public function __construct($config) {
         $this->_setupConfig($config);
@@ -19,7 +18,6 @@ class MasterController {
         $this->router = $this->_loadRouter();
         $this->_db = $this->_loadDb();
         $this->request = $this->_loadRequest();
-        $this->response = $this->_loadResponse();
         $this->_configureSession();
     }
  
@@ -56,7 +54,7 @@ class MasterController {
         $class = ucfirst(array_shift($call_class));
         $class = 'Controller_' . $class;
         $method = array_shift($call_class);
-        $o = new $class($this->config, new Session_Default, $this->request, $this->response);
+        $o = new $class($this->config, new Session_Default, $this->request);
         return $o->$method();
     }
     

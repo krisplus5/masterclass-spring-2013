@@ -11,7 +11,7 @@ class Response_Http implements Response_Interface {
 	}
 
 	public function setArgs(array $args){
-		$this->$data = array_merge($this->_data,$args);
+		$this->_data = array_merge($this->_data,$args);
 	}
 	
 	public function setView($path = ''){
@@ -23,7 +23,7 @@ class Response_Http implements Response_Interface {
 	}
 
 	public function showView(array $args, $view, $layout){
-		$this->_setArgs($args);
+		$this->setArgs($args);
 		$this->setView($view);
 		$this->setLayout($layout);
 		return $this->renderResponse();
