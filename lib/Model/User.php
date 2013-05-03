@@ -35,7 +35,7 @@ class Model_User extends Model_Base {
            $username,
         );
         $stmt = $this->db->prepare($sql);
-        return $stmt.execute($params);     
+        return $stmt->execute($params);
     }
 
 }

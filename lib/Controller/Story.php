@@ -1,97 +1,80 @@
 <?php
 
-class Controller_Story {
+class Controller_Story extends Controller_Base {
     
     protected $story_model;
     protected $comment_model;
-    protected $config;
-    protected $session;
     
-    public function __construct($config) {
-        $this->config = $config;
-        $this->story_model = new Model_Story($config);
-        $this->comment_model = new Model_Comment($config);
-        $this->session = new Session_Default();
-        
-    }
+	protected function _loadModels(){
+		$this->story_model = new Model_Story($this->config);
+		$this->comment_model = new Model_Comment($this->config);
+	}
 
     public function index() {
-        if(!isset($_GET['id'])) {
-            header("Location: /");
-            exit;
+        if(!$this->request->get('id')) {
+        	$response = new Response_HttpRedirect();
+        	$response->setUrl('/');
+        	return $response->renderResponse();
         }
         
-        $story = $this->story_model->getStory($_GET['id']);
+        $story = $this->story_model->getStory($this->request->get('id'));
         if(count($story) < 1) {
-            header("Location: /");
-            exit;
+        	$response = new Response_HttpRedirect();
+        	$response->setUrl('/');
+        	return $response->renderResponse();
         }
                 
-        $comments = $this->comment_model->getStoryComments($_GET['id']);
-        $comment_count = count($comments);
+        $comments = $this->comment_model->getStoryComments($this->request->get('id'));
 
-        $content = '
-            <a class="headline" href="' . $story['url'] . '">' . $story['headline'] . '</a><br />
-            <span class="details">' . $story['created_by'] . ' | ' . $comment_count . ' Comments | 
-            ' . date('n/j/Y g:i a', strtotime($story['created_on'])) . '</span>
-        ';
-        
-        if($this->session->isAuthenticated()) {
-            $content .= '
-            <form method="post" action="/comment/create">
-            <input type="hidden" name="story_id" value="' . $_GET['id'] . '" />
-            <textarea cols="60" rows="6" name="comment"></textarea><br />
-            <input type="submit" name="submit" value="Submit Comment" />
-            </form>            
-            ';
-        }
-        
-        foreach($comments as $comment) {
-            $content .= '
-                <div class="comment"><span class="comment_details">' . $comment['created_by'] . ' | ' .
-                date('n/j/Y g:i a', strtotime($story['created_on'])) . '</span>
-                ' . $comment['comment'] . '</div>
-            ';
-        }
-        
-        require $this->config['views']['layout_path'] . '/layout.phtml';
-        
+		$details = array('story'=>$story,'comments'=>$comments,'comment_count'=>count($comments),'authenticated'=>$this->session->isAuthenticated());
+
+		$response = new Response_Http();
+ 		$response->setArgs(array('isAuthenticated'=>$this->session->isAuthenticated()));
+ 
+        return $response->showView(($details),
+			$this->config['views']['view_path'] . '/story_list.php',
+			$this->config['views']['layout_path'] . '/layout.phtml');
     }
     
     public function create() {
         if(!$this->session->isAuthenticated()) {
-            header("Location: /user/login");
-            exit;
+         	$response = new Response_HttpRedirect();
+        	$response->setUrl('/');
+        	return $response->renderResponse();
         }
         
         $error = '';
-        if(isset($_POST['create'])) {
-            if(!isset($_POST['headline']) || !isset($_POST['url']) ||
-               !filter_input(INPUT_POST, 'url', FILTER_VALIDATE_URL)) {
-                $error = 'You did not fill in all the fields or the URL did not validate.';       
+		$details = array('headline'=>'','url'=>'');
+
+        if($this->request->get('create')) {
+        	
+        	$details['headline'] = $this->request->get('headline');
+			$details['url'] = $this->request->get('url');
+        	
+            if($details['headline']=='' || $details['url']=='' || !filter_var($details['url'], FILTER_VALIDATE_URL)) {
+				$error = 'You did not fill in all the fields or the URL did not validate.';       
             } else {
                 $args = array(
-                   $_POST['headline'],
-                   $_POST['url'],
+                   $details['headline'],
+                   $details['url'],
                    $this->session->username,
-                );
-                $id = $this->story_model->createStory($args);
-                header("Location: /story/?id=$id");
-                exit;
+				);
+				$id = $this->story_model->createStory($args);
+
+				$response = new Response_HttpRedirect();
+                $response->setUrl("/story/?id=$id");
+				return $response->renderResponse();
             }
         }
         
-        $content = '
-            <form method="post">
-                ' . $error . '<br />
+		$details = array_merge($details,array('error'=>$error));
         
-                <label>Headline:</label> <input type="text" name="headline" value="" /> <br />
-                <label>URL:</label> <input type="text" name="url" value="" /><br />
-                <input type="submit" name="create" value="Create" />
-            </form>
-        ';
-        
-        require $this->config['views']['layout_path'] . '/layout.phtml';
+		$response = new Response_Http();
+		$response->setArgs(array('isAuthenticated'=>$this->session->isAuthenticate()));
+ 
+        return $response->showView(($details),
+			$this->config['views']['view_path'] . '/story_form.php',
+			$this->config['views']['layout_path'] . '/layout.phtml');
     }
     
 }
