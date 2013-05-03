@@ -13,7 +13,7 @@ class Database_Mysql extends Database_Base {
 		return new Database_Statement($this, $stmt);
     }
     
-    protected function lastInsertId() {
+    public function lastInsertId() {
         return $this->db->lastInsertId();
     }
 

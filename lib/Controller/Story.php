@@ -11,22 +11,25 @@ class Controller_Story extends Controller_Base {
 	}
 
     public function index() {
-        if(!isset($_GET['id'])) {
-            header("Location: /");
-            exit;
+        if(!$this->request->get('id')) {
+        	$response = new Response_HttpRedirect();
+        	$response->setUrl('/');
+        	return $response->renderResponse();
         }
         
-        $story = $this->story_model->getStory($_GET['id']);
+        $story = $this->story_model->getStory($this->request->get('id'));
         if(count($story) < 1) {
-            header("Location: /");
-            exit;
+        	$response = new Response_HttpRedirect();
+        	$response->setUrl('/');
+        	return $response->renderResponse();
         }
                 
-        $comments = $this->comment_model->getStoryComments($_GET['id']);
+        $comments = $this->comment_model->getStoryComments($this->request->get('id'));
 
 		$details = array('story'=>$story,'comments'=>$comments,'comment_count'=>count($comments),'authenticated'=>$this->session->isAuthenticated());
 
 		$response = new Response_Http();
+ 		$response->setArgs(array('isAuthenticated'=>$this->session->isAuthenticated()));
  
         return $response->showView(($details),
 			$this->config['views']['view_path'] . '/story_list.php',
@@ -35,21 +38,18 @@ class Controller_Story extends Controller_Base {
     
     public function create() {
         if(!$this->session->isAuthenticated()) {
-            header("Location: /user/login");
-            exit;
+         	$response = new Response_HttpRedirect();
+        	$response->setUrl('/');
+        	return $response->renderResponse();
         }
         
         $error = '';
 		$details = array('headline'=>'','url'=>'');
 
-        if(isset($_POST['create'])) {
+        if($this->request->get('create')) {
         	
-        	if(isset($_POST['headline'])){
-	        	$details['headline'] = $_POST['headline'];
-			}
-			if(isset($_POST['url'])){
-				$details['url'] = $_POST['url'];
-			}
+        	$details['headline'] = $this->request->get('headline');
+			$details['url'] = $this->request->get('url');
         	
             if($details['headline']=='' || $details['url']=='' || !filter_var($details['url'], FILTER_VALIDATE_URL)) {
 				$error = 'You did not fill in all the fields or the URL did not validate.';       
@@ -60,13 +60,17 @@ class Controller_Story extends Controller_Base {
                    $this->session->username,
 				);
 				$id = $this->story_model->createStory($args);
-				header("Location: /story/?id=$id");
-				exit;
+
+				$response = new Response_HttpRedirect();
+                $response->setUrl("/story/?id=$id");
+				return $response->renderResponse();
             }
         }
+        
 		$details = array_merge($details,array('error'=>$error));
         
 		$response = new Response_Http();
+		$response->setArgs(array('isAuthenticated'=>$this->session->isAuthenticate()));
  
         return $response->showView(($details),
 			$this->config['views']['view_path'] . '/story_form.php',

@@ -4,7 +4,7 @@ class Router_Default {
 
 	protected $config;
 	protected $response;
-	protected $request;
+//	protected $request;
 	
 	public function __construct(array $config = array()){
 		$this->config = $config;

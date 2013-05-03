@@ -11,8 +11,8 @@ class Controller_User extends Controller_Base {
  		$details = array('username'=>'','email'=>'','password'=>'','password_check'=>'');
         
         // Do the create
-        if(isset($_POST['create'])) {
-			$details = array('username'=>$_POST['username'],'email'=>$_POST['email'],'password'=>$_POST['password'],'password_check'=>$_POST['password_check']);
+        if($this->request->get('create')) {
+			$details = array('username'=>$this->request->get('username'),'email'=>$this->request->get('email'),'password'=>$this->request->get('password'),'password_check'=>$this->request->get('password_check'));
 
             if(empty($details['username']) || empty($details['email']) ||
                empty($details['password']) || empty($details['password_check'])) {
@@ -45,8 +45,10 @@ class Controller_User extends Controller_Base {
                     md5($details['username'] . $details['password']),
 				);
 				$this->model->createUser($params);
-				header("Location: /user/login");
-				exit;
+
+	        	$response = new Response_HttpRedirect();
+	        	$response->setUrl('/user/login');
+	        	return $response->renderResponse();
 			}
 		}
 		$details = array_merge(array('error'=>$error),$details);
@@ -61,17 +63,18 @@ class Controller_User extends Controller_Base {
     public function account() {
         $error = null;
         if(!$this->session->isAuthenticated()) {
-            header("Location: /user/login");
-            exit;
+         	$response = new Response_HttpRedirect();
+        	$response->setUrl('/user/login');
+        	return $response->renderResponse();
         }
         
-        if(isset($_POST['updatepw'])) {
-            if(!isset($_POST['password']) || !isset($_POST['password_check']) ||
-               $_POST['password'] != $_POST['password_check'] || $_POST['password']=='') {
+        if($this->request->get('updatepw')) {
+            if($this->request->get('password')=='' || $this->request->get('password_check')=='' ||
+               $this->request->get('password') != $this->request->get('password_check')) {
                 $error = 'The password fields were blank or they did not match. Please try again.';       
             }
             else {
-                $this->model->changeUserPassword($this->session->username, $_POST['password']);
+                $this->model->changeUserPassword($this->session->username, $this->request->get('password'));
                 $error = 'Your password was changed.';
             }
         }
@@ -89,23 +92,24 @@ class Controller_User extends Controller_Base {
   		$details = array('user'=>'','pass'=>'');
         
         // Do the login
-        if(isset($_POST['login'])) {
-	  		$details = array('user'=>$_POST['user'],'pass'=>$_POST['pass']);
+        if($this->request->get('login')) {
+	  		$details = array('user'=>$this->request->get('user'),'pass'=>$this->request->get('pass'));
             $username = $details['user'];
             $password = $details['pass'];
             $result = $this->model->authenticateUser($username, $password);
             if($result['authenticated']) {
-               $data = $result['user'];
-               $this->session->regenerate();
-               $this->session->authenticate();
-               $this->session->__set('username',$data['username']);
-               header("Location: /");
-               exit;
+				$data = $result['user'];
+				$this->session->regenerate();
+				$this->session->authenticate();
+				$this->session->__set('username',$data['username']);
+ 
+				$response = new Response_HttpRedirect();
+	        	$response->setUrl('/');
+	        	return $response->renderResponse();
             }
             else {
                 $error = 'Your username/password did not match.';
             }
-
         }
         
         $details = array_merge($details,array('error'=>$error));
@@ -120,6 +124,8 @@ class Controller_User extends Controller_Base {
     public function logout() {
         // Log out, redirect
         $this->session->destroy();
-        header("Location: /");
+        	$response = new Response_HttpRedirect();
+        	$response->setUrl('/');
+        	return $response->renderResponse();
     }
 }
